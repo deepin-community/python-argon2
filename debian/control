@@ -5,7 +5,7 @@ Section: python
 Priority: optional
 Build-Depends: debhelper-compat (= 13),
                dh-python,
-               libargon2-0-dev,
+               libargon2-dev,
                python3-all-dev,
                python3-cffi,
                python3-hypothesis,
