@@ -1,25 +1,30 @@
 ---
+ci:
+  autoupdate_schedule: monthly
+
 repos:
-  - repo: https://github.com/psf/black
-    rev: 21.7b0
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.11.12
     hooks:
-      - id: black
-        language_version: python3.8
+      - id: ruff-check
+        args: [--fix, --exit-non-zero-on-fix]
+      - id: ruff-format
 
-  - repo: https://github.com/PyCQA/isort
-    rev: 5.9.3
+  - repo: https://github.com/econchick/interrogate
+    rev: 1.7.0
     hooks:
-      - id: isort
-        additional_dependencies: [toml]
+      - id: interrogate
+        args: [tests]
 
-  - repo: https://github.com/PyCQA/flake8
-    rev: 3.9.2
+  - repo: https://github.com/codespell-project/codespell
+    rev: v2.4.1
     hooks:
-      - id: flake8
+      - id: codespell
 
   - repo: https://github.com/pre-commit/pre-commit-hooks
-    rev: v4.0.1
+    rev: v5.0.0
     hooks:
       - id: trailing-whitespace
       - id: end-of-file-fixer
-      - id: debug-statements
+      - id: check-toml
+      - id: check-yaml

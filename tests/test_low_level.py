@@ -1,3 +1,5 @@
+# SPDX-License-Identifier: MIT
+
 import binascii
 import os
 
@@ -93,11 +95,11 @@ TEST_PARALLELISM = 4
 TEST_HASH_LEN = 32
 
 i_and_d_encoded = pytest.mark.parametrize(
-    "type,hash",
+    ("type", "hash"),
     [(Type.I, TEST_HASH_I), (Type.D, TEST_HASH_D), (Type.ID, TEST_HASH_ID)],
 )
 i_and_d_raw = pytest.mark.parametrize(
-    "type,hash",
+    ("type", "hash"),
     [(Type.I, TEST_RAW_I), (Type.D, TEST_RAW_D), (Type.ID, TEST_RAW_ID)],
 )
 
@@ -183,13 +185,15 @@ class TestHash:
                 Type.I,
             )
 
-    @both_hash_funcs
-    @given(st.binary(max_size=128))
+    @given(
+        st.sampled_from((hash_secret, hash_secret_raw)),
+        st.binary(max_size=128),
+    )
     def test_hash_fast(self, func, secret):
         """
         Hash various secrets as cheaply as possible.
         """
-        hash_secret(
+        func(
             secret,
             salt=b"12345678",
             time_cost=1,
@@ -292,40 +296,37 @@ def test_core():
 
     ctx = ffi.new(
         "argon2_context *",
-        dict(
-            out=cout,
-            outlen=hash_len,
-            version=ARGON2_VERSION,
-            pwd=cpwd,
-            pwdlen=len(pwd),
-            salt=csalt,
-            saltlen=len(salt),
-            secret=ffi.NULL,
-            secretlen=0,
-            ad=ffi.NULL,
-            adlen=0,
-            t_cost=1,
-            m_cost=8,
-            lanes=1,
-            threads=1,
-            allocate_cbk=ffi.NULL,
-            free_cbk=ffi.NULL,
-            flags=lib.ARGON2_DEFAULT_FLAGS,
-        ),
+        {
+            "out": cout,
+            "outlen": hash_len,
+            "version": ARGON2_VERSION,
+            "pwd": cpwd,
+            "pwdlen": len(pwd),
+            "salt": csalt,
+            "saltlen": len(salt),
+            "secret": ffi.NULL,
+            "secretlen": 0,
+            "ad": ffi.NULL,
+            "adlen": 0,
+            "t_cost": 1,
+            "m_cost": 8,
+            "lanes": 1,
+            "threads": 1,
+            "allocate_cbk": ffi.NULL,
+            "free_cbk": ffi.NULL,
+            "flags": lib.ARGON2_DEFAULT_FLAGS,
+        },
     )
 
     rv = core(ctx, Type.D.value)
 
     assert 0 == rv
-    assert (
-        hash_secret_raw(
-            pwd,
-            salt=salt,
-            time_cost=1,
-            memory_cost=8,
-            parallelism=1,
-            hash_len=hash_len,
-            type=Type.D,
-        )
-        == bytes(ffi.buffer(ctx.out, ctx.outlen))
-    )
+    assert hash_secret_raw(
+        pwd,
+        salt=salt,
+        time_cost=1,
+        memory_cost=8,
+        parallelism=1,
+        hash_len=hash_len,
+        type=Type.D,
+    ) == bytes(ffi.buffer(ctx.out, ctx.outlen))

@@ -1,11 +1,21 @@
-from .exceptions import InvalidHash
+# SPDX-License-Identifier: MIT
+
+from __future__ import annotations
+
+import platform
+import sys
+
+from dataclasses import dataclass
+from typing import Any
+
+from .exceptions import InvalidHashError, UnsupportedParametersError
 from .low_level import Type
 
 
 NoneType = type(None)
 
 
-def _check_types(**kw):
+def _check_types(**kw: Any) -> str | None:
     """
     Check each ``name: (value, types)`` in *kw*.
 
@@ -19,27 +29,27 @@ def _check_types(**kw):
             else:
                 types = types.__name__
             errors.append(
-                "'{name}' must be a {type} (got {actual})".format(
-                    name=name, type=types, actual=type(value).__name__
-                )
+                f"'{name}' must be a {types} (got {type(value).__name__})"
             )
 
     if errors != []:
         return ", ".join(errors) + "."
 
-
-def _encoded_str_len(l):
-    """
-    Compute how long a byte string of length *l* becomes if encoded to hex.
-    """
-    return (l << 2) / 3 + 2
+    return None
 
 
-def _decoded_str_len(l):
+def _is_wasm() -> bool:
+    return sys.platform == "emscripten" or platform.machine() in [
+        "wasm32",
+        "wasm64",
+    ]
+
+
+def _decoded_str_len(length: int) -> int:
     """
     Compute how long an encoded string of length *l* becomes.
     """
-    rem = l % 4
+    rem = length % 4
 
     if rem == 3:
         last_group_len = 2
@@ -48,109 +58,66 @@ def _decoded_str_len(l):
     else:
         last_group_len = 0
 
-    return l // 4 * 3 + last_group_len
+    return length // 4 * 3 + last_group_len
 
 
+@dataclass
 class Parameters:
     """
     Argon2 hash parameters.
 
     See :doc:`parameters` on how to pick them.
 
-    :ivar Type type: Hash type.
-    :ivar int version: Argon2 version.
-    :ivar int salt_len: Length of the salt in bytes.
-    :ivar int hash_len: Length of the hash in bytes.
-    :ivar int time_cost: Time cost in iterations.
-    :ivar int memory_cost: Memory cost in kibibytes.
-    :ivar int parallelism: Number of parallel threads.
+    Attributes:
+        type: Hash type.
+
+        version: Argon2 version.
+
+        salt_len: Length of the salt in bytes.
+
+        hash_len: Length of the hash in bytes.
+
+        time_cost: Time cost in iterations.
+
+        memory_cost: Memory cost in kibibytes.
+
+        parallelism: Number of parallel threads.
 
     .. versionadded:: 18.2.0
     """
 
-    __slots__ = [
-        "type",
-        "version",
-        "salt_len",
+    type: Type
+    version: int
+    salt_len: int
+    hash_len: int
+    time_cost: int
+    memory_cost: int
+    parallelism: int
+
+    __slots__ = (
         "hash_len",
-        "time_cost",
         "memory_cost",
         "parallelism",
-    ]
-
-    def __init__(
-        self,
-        type,
-        version,
-        salt_len,
-        hash_len,
-        time_cost,
-        memory_cost,
-        parallelism,
-    ):
-        self.type = type
-        self.version = version
-        self.salt_len = salt_len
-        self.hash_len = hash_len
-        self.time_cost = time_cost
-        self.memory_cost = memory_cost
-        self.parallelism = parallelism
-
-    def __repr__(self):
-        return (
-            "<Parameters(type=%r, version=%d, hash_len=%d, salt_len=%d, "
-            "time_cost=%d, memory_cost=%d, parallelism=%d)>"
-            % (
-                self.type,
-                self.version,
-                self.hash_len,
-                self.salt_len,
-                self.time_cost,
-                self.memory_cost,
-                self.parallelism,
-            )
-        )
-
-    def __eq__(self, other):
-        if self.__class__ != other.__class__:
-            return NotImplemented
-
-        return (
-            self.type,
-            self.version,
-            self.salt_len,
-            self.hash_len,
-            self.time_cost,
-            self.memory_cost,
-            self.parallelism,
-        ) == (
-            other.type,
-            other.version,
-            other.salt_len,
-            other.hash_len,
-            other.time_cost,
-            other.memory_cost,
-            other.parallelism,
-        )
-
-    def __ne__(self, other):
-        if self.__class__ != other.__class__:
-            return NotImplemented
-
-        return not self.__eq__(other)
+        "salt_len",
+        "time_cost",
+        "type",
+        "version",
+    )
 
 
 _NAME_TO_TYPE = {"argon2id": Type.ID, "argon2i": Type.I, "argon2d": Type.D}
 _REQUIRED_KEYS = sorted(("v", "m", "t", "p"))
 
 
-def extract_parameters(hash):
+def extract_parameters(hash: str) -> Parameters:
     """
     Extract parameters from an encoded *hash*.
 
-    :param str params: An encoded Argon2 hash string.
+    Args:
+        hash: An encoded Argon2 hash string.
 
-    :rtype: Parameters
+    Returns:
+        The parameters used to create the hash.
 
     .. versionadded:: 18.2.0
     """
@@ -161,10 +128,10 @@ def extract_parameters(hash):
         parts.insert(2, "v=18")
 
     if len(parts) != 6:
-        raise InvalidHash
+        raise InvalidHashError
 
-    if parts[0] != "":
-        raise InvalidHash
+    if parts[0]:
+        raise InvalidHashError
 
     try:
         type = _NAME_TO_TYPE[parts[1]]
@@ -172,14 +139,14 @@ def extract_parameters(hash):
         kvs = {
             k: int(v)
             for k, v in (
-                s.split("=") for s in [parts[2]] + parts[3].split(",")
+                s.split("=") for s in [parts[2], *parts[3].split(",")]
             )
         }
-    except Exception:
-        raise InvalidHash
+    except Exception:  # noqa: BLE001
+        raise InvalidHashError from None
 
     if sorted(kvs.keys()) != _REQUIRED_KEYS:
-        raise InvalidHash
+        raise InvalidHashError
 
     return Parameters(
         type=type,
@@ -190,3 +157,18 @@ def extract_parameters(hash):
         memory_cost=kvs["m"],
         parallelism=kvs["p"],
     )
+
+
+def validate_params_for_platform(params: Parameters) -> None:
+    """
+    Validate *params* against current platform.
+
+    Args:
+        params: Parameters to be validated
+
+    Returns:
+       None
+    """
+    if _is_wasm() and params.parallelism != 1:
+        msg = "In WebAssembly environments `parallelism` must be 1."
+        raise UnsupportedParametersError(msg)
