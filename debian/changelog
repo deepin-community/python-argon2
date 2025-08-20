@@ -1,3 +1,48 @@
+python-argon2 (25.1.0-2) unstable; urgency=medium
+
+  * Team upload.
+  * Upstream stopped signing tags with GPG after 23.1.0.
+  * d/watch: disabled GPG-key verification (Closes: #1111266).
+  * d/upstream/signing-key.asc: removed obsolete GPG key.
+
+ -- Carl Keinath <carl.keinath@gmail.com>  Mon, 18 Aug 2025 00:14:46 +0200
+
+python-argon2 (25.1.0-1) unstable; urgency=medium
+
+  * Team upload.
+  * New upstream release 25.1.0.
+  * d/watch:
+    + Tags do not use prefix 'v' anymore.
+  * Drop support for python <= 3.7.
+  * Added CI/CD config.
+  * Fix FTBFS (Closes: #1048524).
+
+ -- Carl Keinath <carl.keinath@gmail.com>  Sun, 03 Aug 2025 12:15:03 +0200
+
+python-argon2 (23.1.0-1) experimental; urgency=medium
+
+  * Team upload.
+  * New upstream release 23.1.0.
+  * d/control:
+    + Bump Standards-Version to 4.7.2.
+    + Switched to dh-sequence-python3.
+    + Migrate from setuptools to hatchling (upstream change).
+    + Drop unnecessary shlibs dependency.
+  * d/watch:
+    + Set mode to git.
+    + Update upstream signing key (minified export version).
+  * Port patch for generic Sphinx theme.
+  * d/rules: Remove obsolete overrides.
+
+ -- Carl Keinath <carl.keinath@gmail.com>  Sun, 06 Apr 2025 17:03:34 +0200
+
+python-argon2 (21.1.0-3) unstable; urgency=medium
+
+  * Team upload.
+  * Port to Sphinx 8.0 (closes: #1090133).
+
+ -- Colin Watson <cjwatson@debian.org>  Tue, 24 Dec 2024 18:39:04 +0000
+
 python-argon2 (21.1.0-2) unstable; urgency=medium
 
   * Team Upload.

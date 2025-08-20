@@ -1,0 +1,12 @@
+Document: python-argon2-doc
+Title: Argon2 password hashing for Python
+Author: Hynek Schlawack
+Abstract: This documentation describes python-argon2, a library for secure password
+ hashing in Python using the Argon2 algorithm. It provides an easy-to-use interface
+ and secure defaults based on the Argon2id variant, standardized in RFC 9106.
+Section: Programming/Python
+
+Format: HTML
+Index: /usr/share/doc/python-argon2-doc/html/index.html
+Files: /usr/share/doc/python-argon2-doc/html/*.html
+

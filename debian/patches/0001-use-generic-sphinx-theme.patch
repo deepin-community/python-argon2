@@ -1,0 +1,38 @@
+From: Carl Keinath <carl.keinath@gmail.com>
+Date: Sun, 3 Aug 2025 12:24:56 +0200
+Subject: use-generic-sphinx-theme
+Forwarded: not-needed
+
+---
+ docs/conf.py | 18 +++++++++---------
+ 1 file changed, 9 insertions(+), 9 deletions(-)
+
+diff --git a/docs/conf.py b/docs/conf.py
+index 7da440f..f28b864 100644
+--- a/docs/conf.py
++++ b/docs/conf.py
+@@ -65,15 +65,15 @@ add_function_parentheses = True
+ 
+ # -- Options for HTML output ----------------------------------------------
+ 
+-html_theme = "furo"
+-html_theme_options = {
+-    "top_of_page_buttons": [],
+-    "light_css_variables": {
+-        "font-stack": "Inter,sans-serif",
+-        "font-stack--monospace": "BerkeleyMono, MonoLisa, ui-monospace, "
+-        "SFMono-Regular, Menlo, Consolas, Liberation Mono, monospace",
+-    },
+-}
++# html_theme = "furo"
++# html_theme_options = {
++#     "top_of_page_buttons": [],
++#     "light_css_variables": {
++#         "font-stack": "Inter,sans-serif",
++#         "font-stack--monospace": "BerkeleyMono, MonoLisa, ui-monospace, "
++#         "SFMono-Regular, Menlo, Consolas, Liberation Mono, monospace",
++#     },
++# }
+ html_static_path = ["_static"]
+ html_css_files = ["custom.css"]
+ 

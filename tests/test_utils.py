@@ -1,4 +1,7 @@
+# SPDX-License-Identifier: MIT
+
 from base64 import b64encode
+from dataclasses import replace
 
 import pytest
 
@@ -7,7 +10,7 @@ from hypothesis import strategies as st
 
 from argon2 import Parameters, Type, extract_parameters
 from argon2._utils import NoneType, _check_types, _decoded_str_len
-from argon2.exceptions import InvalidHash
+from argon2.exceptions import InvalidHashError
 
 
 class TestCheckTypes:
@@ -103,24 +106,24 @@ class TestExtractParameters:
         """
         Invalid hashes of various types raise an InvalidHash error.
         """
-        with pytest.raises(InvalidHash):
+        with pytest.raises(InvalidHashError):
             extract_parameters(hash)
 
 
 class TestParameters:
     def test_eq(self):
         """
-        Parameters are iff every attribute is equal.
+        Parameters are equal iff every attribute is equal.
         """
-        assert VALID_PARAMETERS == VALID_PARAMETERS
-        assert not VALID_PARAMETERS != VALID_PARAMETERS
+        assert VALID_PARAMETERS == VALID_PARAMETERS  # noqa: PLR0124
+        assert VALID_PARAMETERS != replace(VALID_PARAMETERS, salt_len=9)
 
     def test_eq_wrong_type(self):
         """
         Parameters are only compared if they have the same type.
         """
         assert VALID_PARAMETERS != "foo"
-        assert not VALID_PARAMETERS == object()
+        assert VALID_PARAMETERS != object()
 
     def test_repr(self):
         """
@@ -136,9 +139,7 @@ class TestParameters:
                 time_cost=2,
                 parallelism=4,
             )
-        ) in [
-            "<Parameters(type=<Type.ID: 2>, version=19, hash_len=32, "
-            "salt_len=8, time_cost=2, memory_cost=65536, parallelism=4)>",
-            "<Parameters(type=Type.ID, version=19, hash_len=32, "
-            "salt_len=8, time_cost=2, memory_cost=65536, parallelism=4)>",
-        ]
+        ) == (
+            "Parameters(type=<Type.ID: 2>, version=19, salt_len=8, "
+            "hash_len=32, time_cost=2, memory_cost=65536, parallelism=4)"
+        )

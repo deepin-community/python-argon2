@@ -1,4 +1,10 @@
-from . import exceptions, low_level
+# SPDX-License-Identifier: MIT
+
+"""
+Argon2 for Python
+"""
+
+from . import exceptions, low_level, profiles
 from ._legacy import hash_password, hash_password_raw, verify_password
 from ._password_hasher import (
     DEFAULT_HASH_LENGTH,
@@ -12,19 +18,11 @@ from ._utils import Parameters, extract_parameters
 from .low_level import Type
 
 
-__version__ = "21.1.0"
-
 __title__ = "argon2-cffi"
-__description__ = "The secure Argon2 password hashing algorithm."
-__url__ = "https://argon2-cffi.readthedocs.io/"
-__uri__ = __url__
-__doc__ = __description__ + " <" + __url__ + ">"
 
 __author__ = "Hynek Schlawack"
-__email__ = "hs@ox.cx"
-
-__license__ = "MIT"
 __copyright__ = "Copyright (c) 2015 " + __author__
+__license__ = "MIT"
 
 
 __all__ = [
@@ -41,5 +39,41 @@ __all__ = [
     "hash_password",
     "hash_password_raw",
     "low_level",
+    "profiles",
     "verify_password",
 ]
+
+
+def __getattr__(name: str) -> str:
+    dunder_to_metadata = {
+        "__version__": "version",
+        "__description__": "summary",
+        "__uri__": "",
+        "__url__": "",
+        "__email__": "",
+    }
+    if name not in dunder_to_metadata:
+        msg = f"module {__name__} has no attribute {name}"
+        raise AttributeError(msg)
+
+    import warnings
+
+    from importlib.metadata import metadata
+
+    warnings.warn(
+        f"Accessing argon2.{name} is deprecated and will be "
+        "removed in a future release. Use importlib.metadata directly "
+        "to query for argon2-cffi's packaging metadata.",
+        DeprecationWarning,
+        stacklevel=2,
+    )
+
+    meta = metadata("argon2-cffi")
+
+    if name in ("__uri__", "__url__"):
+        return meta["Project-URL"].split(" ", 1)[-1]
+
+    if name == "__email__":
+        return meta["Author-email"].split("<", 1)[1].rstrip(">")
+
+    return meta[dunder_to_metadata[name]]
